@@ -11,7 +11,7 @@ Some good candidates for statistical analyses that I am considering to include: 
 
 ###### Assumptions
 The statistical tests use Base R functions; however, I like to use tidyverse packages, so my R code will be dominated by their functions. I am assuming that my audience has some general knowledge about tidyverse packages. I provide explanations for most of my functions at least once, though. The following are some explanations of packages that I use:
-  *dyplyr* for dataset manipulations, *magrittr* for organizing manipulations ("%>%" are called pipes), *ggplot2* for graphing, and *broom* for converting Base R outputs into tibbles. Also, I use non-tidyverse packages including "*gpubr* for combining multiple graphs into 1 plot and *kableExtra* for converting tibbles into tables ready for export. 
+  *dyplyr* for dataset manipulations, *magrittr* for organizing manipulations ("%>%" are called pipes), *ggplot2* for graphing, and *broom* for converting Base R outputs into tibbles. Also, I use non-tidyverse packages including "*ggpubr* for combining multiple graphs into 1 plot and *kableExtra* for converting tibbles into tables ready for export. 
 
 ### Statistical Tests
 I address 3 major parts of statistical analyses: checking assumptions, conducting tests, and exporting graphs & tables. Statistical tests include: 
