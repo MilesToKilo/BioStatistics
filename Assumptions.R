@@ -4,11 +4,25 @@
 # 2. Normality assumption
 # 3. Equal Variance assumption
 # 4. Lack of fit assumption
+# 5. Optimizing your code
 
 # Load Data ---------------------------------------------------------------
 
-# Load package
-library(tidyverse) # Main processing package
+# Load packages
+pack <- c("tidyverse", # Main processing package
+          "ggpubr") # Grouping plots
+
+package.check <- lapply(
+  pack, # List of packages to load
+  FUN = function(x) { # Making a function
+    if (!require(x, character.only = TRUE)) { # If you can't find the package
+      install.packages(x, dependencies = TRUE) # First install it
+      library(x, character.only = TRUE) # Then load it
+    }
+  }
+)
+rm(list = ls()) # Remove object and function after use
+
 # View available datasets
 library(help = "datasets")
 # Let's use these datasets
@@ -17,12 +31,15 @@ head(iris)
 
 # Save as objects
 warp <- as_tibble(warpbreaks) %>% # Convert from data frame to tibble 
-  select(wool, tension, breaks) %>% # Change column order
-  print()
-warpbreaks <- warpbreaks # Some functions require data frames
+  select(wool, tension, breaks) %>% # Change column order (preferrence)
+  print() # Saving an object does not print the result, so this will
+# Some functions require data frames, so we'll use as_data_frame()
 
-flowers <- as_tibble(iris) %>% select(Species, everything()) %>% print()
-iris <- iris
+# iris dataset has 3 different species, but we only want to compare 2
+flowers <- as_tibble(datasets::iris) %>% 
+  filter(Species == "setosa" | Species == "virginica") %>% # This OR that
+  print()
+# Avoid saving over the original dataset in case you need to start over
 
 # Check that all variables are correctly identified
 ## i.e. wool is a categorical variable and should be listed as 
@@ -79,7 +96,8 @@ warp_resid <- resid(warp_model) %>%
 #### Subjective Tests: Histograms and Q-Q plots ####
 
 # Produce a (basic) Histogram
-warp_resid %>% ggplot(aes(x = value)) +
+warp_hist <- # Save graph as object; comment line to view graph
+  warp_resid %>% ggplot(aes(x = value)) +
   labs(title = "Residuals", subtitle = "breaks ~ wool") +
   geom_histogram(binwidth = 3) + # Adjust binwidth according to data
   xlab("Residuals") + ylab("Frequency") + 
@@ -89,7 +107,8 @@ warp_resid %>% ggplot(aes(x = value)) +
 # Data is possibly skewed right (non-normal); double check with another test
 
 # Produce a (basic) Q-Q plot
-warp_resid %>% 
+warp_qq <-
+  warp_resid %>% 
   ggplot(aes(sample = rstandard(warp_model))) + 
   labs(title = "Q-Q Plot", subtitle = "breaks ~ wool") +
   geom_qq() + stat_qq_line() +
@@ -102,7 +121,8 @@ warp_resid %>%
 
 # Function requires data frames; cannot use tibbles
 shapiro.test(warp_resid) # Error!
-warpbreak_resid <- resid(aov(breaks ~ wool, data = warpbreaks))
+warpbreak_resid <- resid(aov(breaks ~ wool, data = as_data_frame(warpbreaks)))
+# If warning sign about "as_tibble", disregard
 shapiro.test(warpbreak_resid)
 # If p < 0.05, you have evidence of NON-normality.
 
@@ -113,37 +133,103 @@ shapiro.test(warpbreak_resid)
 
 # Some of these methods will be addressed in separate files, but not here.
 
-# Example 2: Iris ---------------------------------------------------------
+# Example 2: Iris - Sepal Length ------------------------------------------
 
-## Research question for 2nd example: Are these flower species morphologically 
-## different?
+## Research question for 2nd example: Are the sepal lengths of setosa and
+## virginica flowers morphologically different?
 # x-variable is Species (categorical); y-variable is Sepal.Length (continuous).
 
 # Extract residuals
-flowers_model <- aov(Sepal.Length ~ Species, data = flowers)
-flowers_resid <- resid(flowers_model) %>% as_tibble()
+flowers_modelSL <- aov(Sepal.Length ~ Species, data = flowers)
+flowers_residSL <- resid(flowers_modelSL) %>% as_tibble()
 
 # Plot Hisotgram
-flowers_resid %>% ggplot(aes(x = value)) +
+flowers_histSL <- # Comment this line to show graph, but save it as an object
+  flowers_residSL %>% ggplot(aes(x = value)) +
   labs(title = "Residuals", subtitle = "Sepal Length ~ Species") +
   geom_histogram(binwidth = 0.1) + # Adjust binwidth according to data
   xlab("Residuals") + ylab("Frequency") + 
-  scale_y_continuous(limits = c(0, 18), # Adjust to max y-value
-                     breaks = seq(0, 18, by = 2)) # Adjust to max y-value
+  scale_y_continuous(limits = c(0, 14), # Adjust to max y-value
+                     breaks = seq(0, 14, by = 2)) # Adjust to max y-value
 # Looks somewhat normally distributed; double check
 
 # Plot Q-Q plot
-flowers_resid %>% 
-  ggplot(aes(sample = rstandard(flowers_model))) + 
+flowers_qqSL <-
+  flowers_residSL %>% 
+  ggplot(aes(sample = rstandard(flowers_modelSL))) + 
   labs(title = "Q-Q Plot", subtitle = "Sepal Length ~ Species") +
   geom_qq() + stat_qq_line() +
   ylab("Sample Quantities") + xlab("Theoretical Quantities")
 # Looks equally distributed; triple check
 
 # Shapiro-Wilk Test
-iris_resid <- resid(aov(Sepal.Length ~ Species, data = iris))
+iris_resid <- resid(aov(Sepal.Length ~ Species, data = as_data_frame(flowers)))
 shapiro.test(iris_resid)
 # p-value > 0.05 shows evidence for normal distribution.
+
+# Example 3: Iris - Sepal Width -------------------------------------------
+
+## Research question for 3rd example: Are the sepal widths of setosa and
+## virginica flowers morphologically different?
+# x-variable is Species (categorical); y-variable is Sepal.Width (continuous).
+
+# Extract residuals
+flowers_modelSW <- aov(Sepal.Width  ~ Species, data = flowers) 
+flowers_residSW <- resid(flowers_modelSW) %>% as_tibble()
+
+# Plot Histogram
+flowers_histSW <- 
+  flowers_residSW %>% ggplot(aes(x = value)) +
+  labs(title = "Residuals", subtitle = "Sepal Width ~ Species") +
+  geom_histogram(binwidth = 0.1) + 
+  xlab("Residuals") + ylab("Frequency") + 
+  scale_y_continuous(limits = c(0, 22), breaks = seq(0, 22, by = 2)) 
+
+# Plot Q-Q plot
+# Suggests normally distributed; double check
+flowers_qqSW <- flowers_residSW %>% 
+  ggplot(aes(sample = rstandard(flowers_modelSW))) + 
+  labs(title = "Q-Q Plot", subtitle = "Sepal Width ~ Species") +
+  geom_qq() + stat_qq_line() +
+  ylab("Sample Quantities") + xlab("Theoretical Quantities")
+# Suggests equally distributed; triple check
+
+# Shapiro-Wilk Test
+iris_residSW <- resid(aov(Sepal.Width ~ Species, data = as_data_frame(flowers)))
+shapiro.test(iris_residSW) 
+# If p > 0.05, shows evidence for normal distribution
+
+# Example 4: Iris - Petal Width -------------------------------------------
+
+## Research question for 4th example: Are the petal lengths of setosa and
+## virginica flowers morphologically different?
+# x-variable is Species (categorical); y-variable is Petal.Length (continuous).
+
+# Extract residuals
+flowers_modelPL <- aov(Petal.Width  ~ Species, data = flowers) 
+flowers_residPL <- resid(flowers_modelPL) %>% as_tibble() 
+
+# Plot histogram
+flowers_histPL <- 
+  flowers_residPL %>% ggplot(aes(x = value)) +
+  labs(title = "Residuals", subtitle = "Petal Length ~ Species") +
+  geom_histogram(binwidth = 0.1) + 
+  xlab("Residuals") + ylab("Frequency") + 
+  scale_y_continuous(limits = c(0, 36), breaks = seq(0, 36, by = 2)) 
+# Suggests non-normality; double check
+
+# Plot Q-Q plot
+flowers_qqPL <-
+  flowers_residPL %>%
+  ggplot(aes(sample = rstandard(flowers_modelPL))) + 
+  labs(title = "Q-Q Plot", subtitle = "Petal Length ~ Species") +
+  geom_qq() + stat_qq_line() +
+  ylab("Sample Quantities") + xlab("Theoretical Quantities")
+# Suggests non-normality; triple check
+
+# Shapiro-Wilk Test
+iris_residPL <- resid(aov(Petal.Length ~ Species, data = as_data_frame(flowers)))
+shapiro.test(iris_residPL) # p < 0.05, NON-normal
 
 # Equal Variance Assumption -----------------------------------------------
 
@@ -166,9 +252,16 @@ warp %>% group_by(wool) %>%
 
 flowers %>% group_by(Species) %>% 
   summarise(Sepal.Length_sd   = sd(Sepal.Length, na.rm = TRUE),
-            Sepal.Length_var  = var(Sepal.Length, na.rm = TRUE))
-# What do you conclude about the flower species?
-# Possible evidence for UN-equal variances; double check
+            Sepal.Length_var  = var(Sepal.Length, na.rm = TRUE),
+            Sepal.Width_sd   = sd(Sepal.Width, na.rm = TRUE),
+            Sepal.Width_var  = var(Sepal.Width, na.rm = TRUE),
+            Petal.Length_sd   = sd(Petal.Length, na.rm = TRUE),
+            Petal.Length_var  = var(Petal.Length, na.rm = TRUE)) %>% 
+  print()
+
+# What do you conclude about ratios for var() and sd()?
+# No evidence of un-equal variances for sepal length & width; double check
+# Possible evidence of UN-equal variances for petal length; double check
 
 #### Objective Test: Bartlett Test and Fligner Test ####
 
@@ -176,19 +269,23 @@ flowers %>% group_by(Species) %>%
 # If normal,     then apply Bartlett Test
 # If non-normal, then apply Fligner Test
 
-# Recall Warp is non-normal while flowers is normal
+# Recap of assumptions:
+# Warp and petal length are non-normal 
+# Sepal length and width are normal
+
+# Take note of the different outputs and how it could alter your interpretations
 bartlett.test(data = warp, breaks ~ wool) # Incorrect test
 fligner.test(data  = warp, breaks ~ wool) # Correct test
 # If p > 0.05, you have evidence of equal variances
 
-bartlett.test(data = flowers, Sepal.Length ~ Species) # Correct test
-fligner.test(data  = flowers, Sepal.Length ~ Species) # Incorrect test
-# If p < 0.05, you have evidence of UN-equal variances
+bartlett.test(data = flowers, Sepal.Length ~ Species) # UN-equal variances
+bartlett.test(data = flowers, Sepal.Width  ~ Species) # Equal variances
+fligner.test(data  = flowers, Petal.Length ~ Species) # UN-equal variances
 
-# If you have unequal variances, you can apply transformations to correct it.
-# Typically used functions include: square root, Log, and Log10.
-# Ultimately, this will be a trial and error process.
-
+## If you have unequal variances, you can apply transformations to your dataset.
+## Typically used functions include: square root, Log, and Log10. Ultimately, 
+## this will be a trial and error process. You will need to reference the 
+## transformed dataset if you run statistics on it. 
 
 # Lack of Fit -------------------------------------------------------------
 
@@ -202,3 +299,57 @@ fligner.test(data  = flowers, Sepal.Length ~ Species) # Incorrect test
 ## Now that you know whether these assumptions were validated or broken,
 ## you can apply the correct "flavor" or test. I'll break down the steps to
 ## various tests in separate files. 
+
+# Extra - Consolidate Graphs into a Single Plot ---------------------------
+
+## If you are running multiple tests requiring multiple graphs to check 
+## assumptions, use the package ggpubr to consolidate them into a single
+## plot. This will help with sharing statistics and your interpretations
+
+browseURL("http://www.sthda.com/english/articles/24-ggpubr-publication-ready-plots/81-ggplot2-easy-way-to-mix-multiple-graphs-on-the-same-page/#annotate-the-arranged-figure")
+
+# Plots produced:
+warp_hist
+flowers_histSL
+flowers_histSW
+flowers_histPL
+warp_qq
+flowers_qqSL
+flowers_qqSW
+flowers_qqPL
+
+# Organize graphs into a plot
+assumptions <- ggarrange( # List plots sequentially
+  warp_hist, flowers_histSL, flowers_histSW, flowers_histPL, # Row 1
+  warp_qq, flowers_qqSL, flowers_qqSW, flowers_qqPL, # Row 2
+  ncol = 4, nrow = 2, # Organize graphs into columns and rows
+  labels = c("A", "B", "C", "D", "E", "F", "G", "H"))
+# Annotate plot and print
+annotate_figure(
+  assumptions, # Graphs organized with ggarrange()
+  top = text_grob("Subjective Tests for Normality", # Plot title
+                  color = "red", face = "bold", size = 22), # Aesthetics
+  bottom = text_grob("plot by @MilesToKilo", # Caption
+                     color = "blue", face = "italic", size = 10, # Aesthetics
+                     x = 1, # Starting position of caption
+                     hjust = 1.5)) # Horizontal adjustment
+
+# Extra-Extra - Optimizing your code --------------------------------------
+
+## Notice how calculating values for comparing variances across multiple 
+## variables was repetitive. If you have a dataset that compares > 2 groups 
+## and/or > 2 variables, you can automate the calculations. 
+## Not necessary but time effective and helpful for organization!
+
+# These threads helped me figure out this problem.
+browseURL("https://stackoverflow.com/questions/64453699/how-to-apply-a-list-of-functions-using-tidyverse-and-get-back-a-column-for-each")
+browseURL("https://stackoverflow.com/questions/12064202/apply-several-summary-functions-on-several-variables-by-group-in-one-call?rq=1")
+
+as_tibble(iris) %>% group_by(Species) %>%
+  summarise_all(funs( # Apply these functions to every column
+    var, sd)) %>% # Calculate variance and standard deviation
+  # End pipe here to see the output before calculating ratio
+  select(where(is.numeric)) %>% # Disregard grouping x-variable(s)
+  pivot_longer(everything()) %>% # Convert formatting from wide to long
+  group_by(name) %>% # Group by y-variable(s)
+  summarise_all(funs(max, min, ratio = max / min))
