@@ -59,7 +59,9 @@ flowers %>% group_by(Species) %>% summarise(count = n())
 
 ## Statistical analyses require the appropriate tests to render accurate and 
 ## useful outputs. If assumptions are not checked and any statistical test
-## is applied, the outputs will not be credible for dissemination. I am 
+## is applied, the outputs will not be credible for dissemination. Using the
+## incorrect test can lead to Type I errors (false positives) and Type II
+## errors (false negatives), which is obviously not wanted. I am 
 ## sharing the assumptions addressed in the Biostatistics course I took, 
 ## which are essential for most of the tests that I've coded for. 
 
