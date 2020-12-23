@@ -116,6 +116,8 @@ t.test(breaks ~ wool, var.equal = TRUE, data = warp)
 
 #### 2nd. Applying the Correct Test ####
 
+# t-tests compare the means between 2 populations (or sample populations)
+
 # 4 different flavors of t-tests from possible combinations of assumptions
 # Recap of assumptions:
 # iris - sepal width is normal and has equal variances.
@@ -127,6 +129,7 @@ t.test(breaks ~ wool, var.equal = TRUE, data = warp)
 t.test(data = flowers, Sepal.Width ~ Species, var.equal = TRUE) # Sig. Diff!
 # If data is non-normal, but equal variances: Kruskal-Wallis Test
 kruskal.test(data = warp, breaks ~ wool) # Not Sig. Diff!
+# The Kruskal-Wallis Test is a non-parametric test.
 # If data is normal, but un-equal variances: Welch's t-Test
 t.test(data = flowers, Sepal.Length ~ Species, var.equal = FALSE) # Sig. Diff!
 # If data is both abnormal and unequal variances: Welch's t-Test
@@ -147,6 +150,16 @@ tidy(t.test(data = flowers, Sepal.Length ~ Species, var.equal = FALSE)) %>%
 tidy(t.test(data = flowers, Petal.Width ~ Species, var.equal = FALSE)) %>% 
   select(statistic, parameter, p.value, method) %>% 
   rename(df = parameter)
+
+# What do you report? -----------------------------------------------------
+
+## Important values that I regularly report are the test statistic, Df, and 
+## p-value. The Degrees of Freedom (df) are associated with your 
+## test-statistic, and the test-statistic compares the variation caused by your
+## x-variable with the variation caused by randomness. The p-value shows 
+## if the populations' means are significantly different. 
+## Basically, the test-statistic shows you applied the correct test, and
+## the p-value shows your research findings. 
 
 # Graphing ----------------------------------------------------------------
 
