@@ -2,6 +2,7 @@
 
 # 1. Check Assumptions
 # 2. t-Tests
+# 3. Graphs
 
 # Load Data ---------------------------------------------------------------
 
@@ -146,3 +147,47 @@ tidy(t.test(data = flowers, Sepal.Length ~ Species, var.equal = FALSE)) %>%
 tidy(t.test(data = flowers, Petal.Width ~ Species, var.equal = FALSE)) %>% 
   select(statistic, parameter, p.value, method) %>% 
   rename(df = parameter)
+
+# Graphing ----------------------------------------------------------------
+
+## You can choose many routes to visualize your data. I will share 2 options
+## that I typically use: Bar plots and violin plots.
+
+# Graph Bar Plots ---------------------------------------------------------
+
+# Bar plots help visualize the averages and standard error of each group.
+
+# First, calculate summary statistics 
+warp_sum <- warp %>% group_by(wool) %>% 
+  summarise(
+    breaks_mean  = mean(breaks),
+    breaks_error = sd(breaks) / sqrt(n())) %>% 
+  print()
+
+# Graph (basic) bar plot
+warp_sum %>% ggplot(aes(x = wool, y = breaks_mean, fill = wool)) + 
+  geom_bar(stat = "identity") + # Bar height = mean value
+  geom_errorbar(aes(ymin = breaks_mean + breaks_error, # Top error bar
+                    ymax = breaks_mean - breaks_error), # Bottom error bar
+                width = 0.35, lwd = 1) # Bolding error bar
+## Although averages and standard errors are important, the graph does not 
+## illustrate how the dataset distributions differ. I think knowing the
+## distribution would be more revealing or helpful when comparing groups
+
+# Graph Violin Plot -------------------------------------------------------
+
+## Violin plots are more descriptive about the distribution of values although
+## it does lack averages and standard error values. I address the shortcoming
+## by overlapping the mean as a point.
+
+# Violin plots combine a boxplot and normal distribution
+browseURL("https://towardsdatascience.com/understanding-boxplots-5e2df7bcbd51")
+
+# Graph (basic) violin plot
+warp %>% 
+  ggplot(aes(x = wool, y = breaks, fill = wool)) +
+  geom_violin(size = 1, color = "black", # Adjusting outline 
+              alpha = 0.6) + # Increasing transparency to offset boxplot
+  geom_boxplot(width = 0.1, size = 1, color = "black") + # Adjusting outline
+  stat_summary(geom = "point", color = "white", # Plot a white point
+               fun = "mean") # Calculate the mean for the point
