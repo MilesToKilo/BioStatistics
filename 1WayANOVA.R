@@ -26,20 +26,19 @@ package.check <- lapply(
 rm(list = ls()) # Remove object and function after use
 
 # Load data
-# Using only species and sepal width from iris dataset
-flowers <- as_tibble(iris) %>% select(Species, Sepal.Width) %>% print()
+chick <- as_tibble(chickwts) %>% select(feed, weight) %>% print()
 plant <- as_tibble(PlantGrowth) %>% select(group, weight) %>% print()
 
-# Example 1: Iris - Sepal Width -------------------------------------------
+# Example 1: Chickwts -----------------------------------------------------
 
 # Check Assumptions -------------------------------------------------------
 
 ## The steps to checking assumptions were described in another file, so
 ## I'll provide the code for the objective tests with minimal explanation here:
 
-iris_residSW <- resid(aov(Sepal.Width ~ Species, data = as_data_frame(flowers)))
-shapiro.test(iris_residSW) # p > 0.05, normal dsitribution
-bartlett.test(data = flowers, Sepal.Width  ~ Species) # p > 0.05, equal var
+chick_resid <- resid(aov(weight ~ feed, data = as_data_frame(chick)))
+shapiro.test(chick_resid) # p > 0.05, normal dsitribution
+bartlett.test(data = chick, weight ~ feed) # p > 0.05, equal var
 
 ## I'm only using examples that meet both assumptions necessary for ANOVAs.
 ## If your assumptions are not met, either apply transformations to your data
@@ -54,9 +53,9 @@ bartlett.test(data = flowers, Sepal.Width  ~ Species) # p > 0.05, equal var
 
 # aov(y ~ x) <- this formula can become more complex depending on the model.
 
-# Research Question: Does Sepal Width vary among these 3 plant species?
-flowers_model <- aov(Sepal.Width ~ Species, data = flowers)
-summary(flowers_model) # Show the results
+# Research Question: Does type of feed affect chicken growth?
+chick_model <- aov(weight ~ feed, data = chick)
+summary(chick_model) # Show the results
 
 ## Important values that I regularly report are the F-value, Df, and 
 ## p-value. The F-value and Degrees of Freedom (df) are associated with your 
@@ -66,36 +65,40 @@ summary(flowers_model) # Show the results
 ## Basically, the F-ratio shows you applied the correct test, and
 ## the p-value shows your research findings. 
 
-summary(flowers_model) # p < 0.05, Sig. Diff!
+summary(chick_model) # p < 0.05, Sig. Diff!
 ## Because this test compares more than 1 group, the p-value only shows the 
 ## presence of a significant difference, but does not reveal between which 
 ## groups. To identify the significantly different groups, run a Tukey's Test
-TukeyHSD(flowers_model) # Only need p-value
+TukeyHSD(chick_model) # Only need p-value
 ## The adjusted p-value shows that R incorporated the necessary adjustments
 ## from the ANOVA to Tukey Test. I don't know what it actually does, but 
 ## this function is trusted and regularly used by the scientific community.
 
-# Since all p-values are below 0.05, all comparisons are sig. diff.
+## With this many comparisons, the Tukey's test reveals multiple that are 
+## either significantly different or not. In the next section, I'll show
+## you how to organize the results.
 
 # Convert Outputs into Exportable Tables ----------------------------------
 
 # Use broom::tidy() to convert models into a tibble
-summary(flowers_model) # Output
-flowers_aov <- tidy(flowers_model) %>% 
+summary(chick_model) # Base R output
+chick_aov <- tidy(chick_model) %>% 
   select(term, df, statistic, p.value) %>% 
   print() 
-# Notice the p-values are different now; is that bad?
 
+# Sometimes the p-values are different; is that bad?
 ## The difference is in the threshold for how many digits to report. 
-## Base R only reports up to 16 decimal while broom went to 17. I don't know
-## what broom's actual cutoff is, though.
-flowers_tukey <- tidy(TukeyHSD(flowers_model)) %>% 
+## Base R only reports up to 16 decimal (I think) while broom goes beyond. 
+## I don't know what broom's actual cutoff is, though.
+
+chick_tukey <- tidy(TukeyHSD(chick_model)) %>% 
   select(term, contrast, adj.p.value) %>% # Only selecting what I need to report
+  arrange(desc(adj.p.value)) %>% # Organize from highest to lowest
   print() 
 
 # Convert a tibble into a table using kableExtra::kbl()
-flowers_aov %>% 
-  kbl(caption = "Table 1. 1-Way ANOVA: Sepal Width ~ Species") %>% 
+chick_aov %>% 
+  kbl(caption = "Table 1. 1-Way ANOVA: Weight ~ Chicken Feed") %>% 
   kable_classic(html_font = "Courier New") %>% # Font
   kable_styling(bootstrap_options = c("striped", # Shades every other row
                                       "condensed"), # Decreases empty space
@@ -104,8 +107,8 @@ flowers_aov %>%
   footnote( # Add footnotes describing table for readers
     general = "adjusted p-values < 0.05 are significantly different.") 
 
-flowers_tukey %>% 
-  kbl(caption = "Table 2. Tukey's Test: Sepal Width ~ Species") %>% 
+chick_tukey %>% 
+  kbl(caption = "Table 2. Tukey's Test: Weight ~ Chicken Feed") %>% 
   kable_classic(html_font = "Courier New") %>% # Font
   kable_styling(bootstrap_options = c("striped", # Shades every other row
                                       "condensed"), # Decreases empty space
@@ -113,8 +116,10 @@ flowers_tukey %>%
   row_spec(0, bold = TRUE) %>% # Bold column names
   footnote( # Add footnotes describing table for readers
     general = "adjusted p-values < 0.05 are significantly different.") 
+
 ## Although the p-value is reported as zeros, you want to report it as 
 ## "p < 0.001" because it can never be a zero chance of an alternative outcome.
+## The same with a p-value of 1; it is actually a decimal really close to 1.
 
 ## I have not been successful in exporting this table. For now, I've resorted
 ## to taking a screenshot.
@@ -127,23 +132,23 @@ flowers_tukey %>%
 # First, choose a colorblind friendly palette; I use the package RColorBrewer
 display.brewer.all(colorblindFriendly = TRUE) # View all palettes
 # Divided into 3 groups: Sequential, Divergent, and Qualitative
-display.brewer.pal(3, "Dark2") # Must use a minimum of 3 colors
+display.brewer.pal(6, "Dark2") # Must use a minimum of 3 colors
 
 # Graph Bar Plots 
 # Bar plots help visualize the averages and standard error of each group.
 
 # First, calculate summary statistics 
-flowers_sum <- flowers %>% group_by(Species) %>% 
+chick_sum <- chick %>% group_by(feed) %>% 
   summarise(
-    Sepal.Width_mean  = mean(Sepal.Width),
-    Sepal.Width_error = sd(Sepal.Width) / sqrt(n())) %>% 
+    weight_mean  = mean(weight),
+    weight_error = sd(weight) / sqrt(n())) %>% 
   print()
 
 # Graph (basic) bar plot
-flowers_sum %>% ggplot(aes(x = Species, y = Sepal.Width_mean, fill = Species)) + 
+chick_sum %>% ggplot(aes(x = feed, y = weight_mean, fill = feed)) + 
   geom_bar(stat = "identity") + # Bar height = mean value
-  geom_errorbar(aes(ymin = Sepal.Width_mean + Sepal.Width_error, # Top error bar
-                    ymax = Sepal.Width_mean - Sepal.Width_error), # Bottom error bar
+  geom_errorbar(aes(ymin = weight_mean + weight_error, # Top error bar
+                    ymax = weight_mean - weight_error), # Bottom error bar
                 width = 0.35, lwd = 1) + # Bolding error bar
   scale_fill_brewer(palette = "Dark2")
 
@@ -161,8 +166,8 @@ flowers_sum %>% ggplot(aes(x = Species, y = Sepal.Width_mean, fill = Species)) +
 browseURL("https://towardsdatascience.com/understanding-boxplots-5e2df7bcbd51")
 
 # Graph (basic) violin plot
-flowers %>% 
-  ggplot(aes(x = Species, y = Sepal.Width, fill = Species)) +
+chick %>% 
+  ggplot(aes(x = feed, y = weight, fill = feed)) +
   geom_violin(size = 1, color = "black", # Adjusting outline 
               alpha = 0.6) + # Increasing transparency to offset boxplot
   geom_boxplot(width = 0.1, size = 1, color = "black") + # Adjusting outline
