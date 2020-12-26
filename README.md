@@ -16,7 +16,10 @@ The statistical tests use Base R functions; however, I like to use tidyverse pac
 ### Statistical Tests
 I address 3 major parts of statistical analyses: checking assumptions, conducting tests, and exporting graphs & tables. Statistical tests include: 
 - T-tests
-- 1- and 2-way ANOVAs
+- ANOVAs: 1-Way, 2-Way, and Nested
 - Linear regressions
 - Chi-squared analyses
 - Logistic regressions
+
+###### File Order
+Assumptions -> t-Tests -> 1-Way ANOVA -> 2-Way ANOVA -> Nested ANOVA -> Linear Regressions -> Chi-Squared Analyses -> Logistic Regressions -> Tips and Tricks
