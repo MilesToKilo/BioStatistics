@@ -23,3 +23,5 @@ I address 3 major parts of statistical analyses: checking assumptions, conductin
 
 ###### File Order
 Assumptions -> t-Tests -> 1-Way ANOVA -> 2-Way ANOVA -> Nested ANOVA -> Linear Regressions -> Chi-Squared Analyses -> Logistic Regressions -> Tips and Tricks
+
+Transcribing my notes to GitHub is a side-project of mine, and it takes some time to find and apply existing datasets that match the needs of each statistical test. I will post sections as I complete them, so please be patient (if anyone is even looking at my code).
