@@ -59,6 +59,10 @@ pairs(fert[, 2:5], # Variables being analyzed
 # Each intersection shows a scatterplot for the associated variables 
 # Each scatterplot is repeated twice with the axes switched
 
+## Linear regressions compare 2 continuous variables that don't necessarily
+## have an independent-dependent relationship. This test's purpose is to see
+## how well 1 variable can predict the other. 
+
 ## We are using select variables from the swiss dataset to show different trends
 ## in the data and how to apply the correct the best-fitting formulas.
 
@@ -69,6 +73,8 @@ pairs(fert[, 2:5], # Variables being analyzed
 # Education x Infant Mortality - No trend
 
 # Example 1: Fertility x Infant Mortality ---------------------------------
+
+## Research question: How does fertility affect infant mortality?
 
 # Check Assumptions -------------------------------------------------------
 
@@ -146,6 +152,9 @@ tidy(fert_FxI_model)
 
 # Example 2: Education x Examination --------------------------------------
 
+## Research question: How well does a person's education predict the highest
+## mark for their army examination?
+
 # Check Assumptions -------------------------------------------------------
 
 # Check normality
@@ -176,7 +185,6 @@ plot(fert$Education, fert_ExE_resid) %>% # Plot residuals along your x-variable
 # Exponential growth: x ^ (# > 1)
 # Exponential decay:  x ^ (# < 1)
 # Square root:        x ^ (1 / 2)
-
 
 # Adjust your linear model
 fert_ExE_model2 <- lm(Examination ~ Education + 
